@@ -1,6 +1,6 @@
 {
-	"roiFilter": ["PVLP"],
-	"connectionthreshold": 2,
+	"roiFilter": ["PB"],
+	"connectionthreshold": 6,
 	"partitionVariance": 0.30,
 	"numPartitions": 2,
 	"weightWires": false, 

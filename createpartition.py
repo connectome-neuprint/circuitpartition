@@ -43,19 +43,29 @@ if rois is not None and len(rois) > 0:
     # traverse one ROI at a time
     query = "MATCH (m :Meta:hemibrain) RETURN m.superLevelRois"
     res = np.fetch_custom(query)
-    major_rois = set(res.loc[0,0])
+    major_rois = set(res.iloc[0,0])
 
     for iter1 in range(len(rois)):
         print("Processing ROI:", rois[iter1])
         # warn if ROI is not a super level ROI
-        if rois[iter1 not in major_rois:
+        if rois[iter1] not in major_rois:
             print("ROI not a major ROI, compartment stats might be wrong")
-
-        # ?! calculate rent's number of roi
+        
+        # calculate pins vs compute 
+        totalcompute = 0
+        totalpins = 0
         query = "MATCH (n :`hemibrain-Neuron`) WHERE (n.status=\"Roughly traced\" OR n.status=\"Prelim Roughly traced\" OR n.status=\"Traced\" OR n.status=\"Leaves\") AND n." + rois[iter1] + " RETURN n.roiInfo AS roiInfo"
+    
+        res = np.fetch_custom(query)
+        for idx, row in res.iterrows():
+            roidata = json.loads(row["roiInfo"])
+            totalcompute += roidata[rois[iter1]]["pre"]
+            for troi, val in roidata.items():
+                if troi != rois[iter1] and troi in major_rois:
+                    totalpins += 1
+                    break
 
-
-
+        print("pins: ", totalpins, "compute:", totalcompute)
 
         roifilter = "AND ("
         roifilter += ("n.`" + rois[iter1] + "`") 
