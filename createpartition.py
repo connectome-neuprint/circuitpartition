@@ -61,15 +61,13 @@ if rois is not None and len(rois) > 0:
         for idx, row in res.iterrows():
             roidata = json.loads(row["roiInfo"])
             bodyid = row["bodyid"]
-            totalcompute += roidata[rois[iter1]]["pre"]
+            #totalcompute += roidata[rois[iter1]]["pre"]
             for troi, val in roidata.items():
                 if troi != rois[iter1] and troi in major_rois:
                     totalpins += 1
                     roi2pins.add(bodyid)
                     break
 
-        print("pins: ", totalpins, "compute:", totalcompute)
-        roirent[rois[iter1]] = (totalpins, totalcompute, roi2pins)
 
         roifilter = "AND ("
         roifilter += ("n.`" + rois[iter1] + "`") 
@@ -104,6 +102,14 @@ if rois is not None and len(rois) > 0:
                     connections[(body1,body2)] = 1
                 else:
                     connections[(body1,body2)] += 1
+        
+                if connections[(body1, body2)] == 6:
+                    totalcompute += 6
+                elif connections[(body1, body2)] > 6:
+                    totalcompute += 1
+        
+        print("compute:", totalcompute, "pins: ", totalpins)
+        roirent[rois[iter1]] = (totalpins, totalcompute, roi2pins)
 else:
     # basic query (no locations, otherwise no tractable)
     query = "MATCH (n :`hemibrain-Neuron`)-[z:ConnectsTo]->(m :`hemibrain-Neuron`) WHERE (n.status=\"Roughly traced\" OR n.status=\"Prelim Roughly traced\") AND (m.status=\"Roughly traced\" OR m.status=\"Prelim Roughly traced\") AND z.weight >= " + str(threshold) + " RETURN n.bodyId AS bodyId1, m.bodyId AS bodyId2, z.weight as weight"
@@ -242,7 +248,6 @@ for idx, part in enumerate(res):
         neuronpart[str(body1)].add(part)
         neuronpart[str(body2)].add(part)
 
-print("Partition cost (higher worse)", cuts)
 
 print("Intrinsic neurons")
 for body, partlist in neuronpart.items():
@@ -273,8 +278,11 @@ for idx, part in enumerate(res):
 for idx, part in enumerate(res):
     body1, body2 = index2pair[idx]
 
+print("*******Partition quality*******")
+print("Partition cost (higher worse)", cuts)
+print("#PSDs vs #pins per partition -- fewer PSDs per pin means worse partition")
 for partnum in range(numparts):
-    print(partnum, len(pinparts[partnum]), computeparts[partnum])
+    print(partnum, computeparts[partnum], len(pinparts[partnum]))
 
 # output neuron partition mappings and connection partition mappings
 fout = open("parts.json", 'w')
