@@ -54,18 +54,22 @@ if rois is not None and len(rois) > 0:
         # calculate pins vs compute 
         totalcompute = 0
         totalpins = 0
-        query = "MATCH (n :`hemibrain-Neuron`) WHERE (n.status=\"Roughly traced\" OR n.status=\"Prelim Roughly traced\" OR n.status=\"Traced\" OR n.status=\"Leaves\") AND n." + rois[iter1] + " RETURN n.roiInfo AS roiInfo"
+        query = "MATCH (n :`hemibrain-Neuron`) WHERE (n.status=\"Roughly traced\" OR n.status=\"Prelim Roughly traced\" OR n.status=\"Traced\" OR n.status=\"Leaves\") AND n." + rois[iter1] + " RETURN n.roiInfo AS roiInfo, n.bodyId AS bodyid"
     
         res = np.fetch_custom(query)
+        roi2pins = set()
         for idx, row in res.iterrows():
             roidata = json.loads(row["roiInfo"])
+            bodyid = row["bodyid"]
             totalcompute += roidata[rois[iter1]]["pre"]
             for troi, val in roidata.items():
                 if troi != rois[iter1] and troi in major_rois:
                     totalpins += 1
+                    roi2pins.add(bodyid)
                     break
 
         print("pins: ", totalpins, "compute:", totalcompute)
+        roirent[rois[iter1]] = (totalpins, totalcompute, roi2pins)
 
         roifilter = "AND ("
         roifilter += ("n.`" + rois[iter1] + "`") 
@@ -224,15 +228,17 @@ cuts, res = metis.part_graph(metis_data, numparts, ubvec=[1+partvar])
 partitions = {}
 neuronpart = {}
 connparts = []
+computeparts = [0]*numparts
 for idx, part in enumerate(res):
     body1, body2 = index2pair[idx]
     partitions[index2pair[idx]] = part
     if body1 != -1 and body2 != -1:
+        computeparts[part] += connections[(body1, body2)]
         if str(body1) not in neuronpart:
             neuronpart[str(body1)] = set()
         if str(body2) not in neuronpart:
             neuronpart[str(body2)] = set()
-        connparts.append([body1, body2, part])
+        connparts.append([int(body1), int(body2), int(part)])
         neuronpart[str(body1)].add(part)
         neuronpart[str(body2)].add(part)
 
@@ -246,9 +252,29 @@ for body, partlist in neuronpart.items():
         print(body, ",", partlist[0])
 
 print("multi-part neurons")
+mpneurons = set()
 for body, partlist in neuronpart.items():
     if len(partlist) > 1:
         print(body, ",", partlist)
+        mpneurons.add(body)
+
+pinparts = []
+for part in range(numparts):
+    pinparts.append(set())
+
+for idx, part in enumerate(res):
+    body1, body2 = index2pair[idx]
+    if body1 != -1 and body2 != -1:
+        if str(body1) in mpneurons:
+            pinparts[part].add(body1)
+        if str(body2) in mpneurons:
+            pinparts[part].add(body2)
+
+for idx, part in enumerate(res):
+    body1, body2 = index2pair[idx]
+
+for partnum in range(numparts):
+    print(partnum, len(pinparts[partnum]), computeparts[partnum])
 
 # output neuron partition mappings and connection partition mappings
 fout = open("parts.json", 'w')
