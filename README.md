@@ -5,12 +5,17 @@ of partitions and whether each wire should be weighted by the number of synapses
 
 # Installation
 
-Currently installed in the flyem shared file system.  One must also download the neuprint private token.
+* conda create -n partition neuprint-python
+* conda activate partition
+* conda install metis
+* pip install metis
+
+One must also download the neuprint private token.
 
 # Running the command
 
-  % export NEUPRINT_APPLICATION_CREDENTIALS="YOUR NEUPRINT TOKEN"
-  % /groups/flyem/proj/create_partitions/miniconda3/envs/partition/bin/python createpartition.py config.json
+    % export NEUPRINT_APPLICATION_CREDENTIALS="YOUR NEUPRINT TOKEN"
+    % python createpartition.py config.json
 
 This will output a list of neuron ids and their partition(s) in "parts.json".  The file "connparts.json" provids the list
 of every A-B connection and the partition assignment [bodypre, bodypost, part].
@@ -19,6 +24,7 @@ of every A-B connection and the partition assignment [bodypre, bodypost, part].
 
 * Implement tool that exports a DVID ROI to enable visualization of partition
 * Allow one to recursively partition and previous partitioning result
+* Split connection pairs into different nodes if they are far aware
 * Implement option to embed neuron's connectivity using skeleton representations
 
 
