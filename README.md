@@ -9,6 +9,7 @@ of partitions and whether each wire should be weighted by the number of synapses
 * conda activate partition
 * conda install metis
 * pip install metis
+* pip install scipy
 
 One must also download the neuprint private token.
 

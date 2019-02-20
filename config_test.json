@@ -1,8 +1,8 @@
 {
 	"roiFilter": ["PB"],
 	"connectionthreshold": 6,
-	"partitionVariance": 0.9,
-	"numPartitions": 11,
+	"partitionVariance": 0.5,
+	"numPartitions": 2,
 	"weightWires": false, 
 	"weightNodes": true, 
 	"useSkeleton": false,
