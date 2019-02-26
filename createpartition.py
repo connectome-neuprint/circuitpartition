@@ -54,7 +54,7 @@ if rois is not None and len(rois) > 0:
         # calculate pins vs compute 
         totalcompute = 0
         totalpins = 0
-        query = "MATCH (n :`hemibrain-Neuron`) WHERE (n.status=\"Roughly traced\" OR n.status=\"Prelim Roughly traced\" OR n.status=\"Traced\" OR n.status=\"Leaves\") AND n." + rois[iter1] + " RETURN n.roiInfo AS roiInfo, n.bodyId AS bodyid"
+        query = "MATCH (n :`hemibrain-Neuron`) WHERE (n.status=\"Roughly traced\" OR n.status=\"Prelim Roughly traced\" OR n.status=\"Traced\" OR n.status=\"Leaves\") AND n.`" + rois[iter1] + "` RETURN n.roiInfo AS roiInfo, n.bodyId AS bodyid"
     
         res = np.fetch_custom(query)
         roi2pins = set()
@@ -77,7 +77,7 @@ if rois is not None and len(rois) > 0:
         roifilter += ("m.`" + rois[iter1] + "`") 
         roifilter += ")"
 
-        query = "MATCH (n :`hemibrain-Neuron`)-[:Contains]->(:SynapseSet)-[:Contains]->(x :PreSyn)-[:SynapsesTo]->(y :PostSyn)<-[:Contains]-(:SynapseSet)<-[:Contains]-(m :`hemibrain-Neuron`) WHERE (n.status=\"Roughly traced\" OR n.status=\"Prelim Roughly traced\") AND (m.status=\"Roughly traced\" OR m.status=\"Prelim Roughly traced\") "  + roifilter + " RETURN x.`" + rois[iter1] + "` AS matchroi, n.bodyId AS bodyId1, m.bodyId as bodyId2"
+        query = "MATCH (n :`hemibrain-Neuron`)-[:Contains]->(:SynapseSet)-[:Contains]->(x :PreSyn)-[:SynapsesTo]->(y :PostSyn)<-[:Contains]-(:SynapseSet)<-[:Contains]-(m :`hemibrain-Neuron`) WHERE (n.status=\"Roughly traced\" OR n.status=\"Prelim Roughly traced\" OR n.status=\"Traced\") AND (m.status=\"Roughly traced\" OR m.status=\"Prelim Roughly traced\" OR m.status=\"Traced\") "  + roifilter + " RETURN x.`" + rois[iter1] + "` AS matchroi, n.bodyId AS bodyId1, m.bodyId as bodyId2"
         res = np.fetch_custom(query)
     
         #roifilterset = set([rois[iter1]])
@@ -112,7 +112,7 @@ if rois is not None and len(rois) > 0:
         roirent[rois[iter1]] = (totalpins, totalcompute, roi2pins)
 else:
     # basic query (no locations, otherwise no tractable)
-    query = "MATCH (n :`hemibrain-Neuron`)-[z:ConnectsTo]->(m :`hemibrain-Neuron`) WHERE (n.status=\"Roughly traced\" OR n.status=\"Prelim Roughly traced\") AND (m.status=\"Roughly traced\" OR m.status=\"Prelim Roughly traced\") AND z.weight >= " + str(threshold) + " RETURN n.bodyId AS bodyId1, m.bodyId AS bodyId2, z.weight as weight"
+    query = "MATCH (n :`hemibrain-Neuron`)-[z:ConnectsTo]->(m :`hemibrain-Neuron`) WHERE (n.status=\"Roughly traced\" OR n.status=\"Prelim Roughly traced\" OR n.status=\"Traced\") AND (m.status=\"Roughly traced\" OR m.status=\"Prelim Roughly traced\" OR m.status=\"Traced\") AND z.weight >= " + str(threshold) + " RETURN n.bodyId AS bodyId1, m.bodyId AS bodyId2, z.weight as weight"
     res = np.fetch_custom(query)
 
     for idx, row in res.iterrows():
@@ -289,6 +289,6 @@ fout = open("parts.json", 'w')
 fout.write(json.dumps(neuronpart))
 
 fout = open("connparts.json", 'w')
-fout.write(json.dumps(connparts))
+fout.write(json.dumps({"parts" : connparts, "rois": rois}))
 
 

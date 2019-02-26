@@ -26,7 +26,7 @@ np = Client(SERVER)
 
 #  parse partitions
 partitions = {}
-for entry in partdata:
+for entry in partdata["parts"]:
     b1, b2, part = entry
     if part not in partitions:
         partitions[part] = []
@@ -34,6 +34,18 @@ for entry in partdata:
 
 MAXQUERIES = 100
 points = {}
+
+
+roistr = ""
+rois = partdata["rois"]
+if rois is not None:
+    roistr = "AND ("
+    for index, roi in enumerate(rois):
+        if index == 0:
+            roistr += "x.`" + roi + "`"
+        else:
+            roistr += "OR x.`" + roi + "`"
+    roistr += ")"
 
 # write ROIs
 for part, bodypairs in partitions.items():
@@ -45,7 +57,7 @@ for part, bodypairs in partitions.items():
     
     for iter1 in range(numqueries):
         (body1, body2) = bodypairs[iter1]
-        query = "MATCH (n :`hemibrain-Neuron`)-[:Contains]->(:SynapseSet)-[:Contains]->(x :Synapse)-[:SynapsesTo]->(y :Synapse)<-[:Contains]-(:SynapseSet)<-[:Contains]-(m :`hemibrain-Neuron`) WHERE n.bodyId=%d AND m.bodyId=%d RETURN n.bodyId AS bodyId1, m.bodyId as bodyId2, x.location AS location" % (body1, body2)
+        query = "MATCH (n :`hemibrain-Neuron`)-[:Contains]->(:SynapseSet)-[:Contains]->(x :Synapse)-[:SynapsesTo]->(y :Synapse)<-[:Contains]-(:SynapseSet)<-[:Contains]-(m :`hemibrain-Neuron`) WHERE n.bodyId=%d AND m.bodyId=%d %s RETURN n.bodyId AS bodyId1, m.bodyId as bodyId2, x.location AS location" % (body1, body2, roistr)
         res = np.fetch_custom(query)
         for idx, row in res.iterrows():
             loc = numpy.array(row["location"]["coordinates"])/128

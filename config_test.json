@@ -1,5 +1,5 @@
 {
-	"roiFilter": ["PB"],
+	"roiFilter": ["AB", "BU"],
 	"connectionthreshold": 6,
 	"partitionVariance": 0.2,
 	"numPartitions": 2,
