@@ -32,7 +32,7 @@ for entry in partdata:
         partitions[part] = []
     partitions[part].append((b1,b2))
 
-MAXQUERIES = 5
+MAXQUERIES = 100
 points = {}
 
 # write ROIs
