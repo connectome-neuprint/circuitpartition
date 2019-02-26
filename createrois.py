@@ -118,7 +118,7 @@ for partnum in range(len(partitions)):
 
     roidata = {}
     roidata["type"] = "points"
-    roidata["resolution"] = "128"
+    roidata["resolution"] = 128
     roidata["order"] = "zyx"
     roidata["roi"] = roi
     fout = open(str(partnum)+".part.json", 'w')
