@@ -26,10 +26,10 @@ partdata=json.load(open(partfile))
 
 # if an ROI mask exists, download and downsample to 128 res
 roimask = set()
-if len(sys.argv) == 3:
-    roimaskurl = sys.argv[2]
+RESDIFF = RESOLUTION/32
+for argspot in range(2, len(sys.argv)):
+    roimaskurl = sys.argv[argspot]
     roijson = requests.get(roimaskurl).json()
-    RESDIFF = RESOLUTION/32
     for rle in roijson:
         z,y,x0,x1 = rle
         for pos in range(x0, x1+1):
@@ -61,6 +61,7 @@ if rois is not None:
     roistr += ")"
 
 # write ROIs
+random.seed(1)
 for part, bodypairs in partitions.items():
     print("Retrieving partition", part)
     numqueries = MAXQUERIES
