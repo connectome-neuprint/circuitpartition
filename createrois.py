@@ -17,10 +17,23 @@ import random
 from neuprint import Client
 import numpy
 import json
+import requests
+
+RESOLUTION = 128 # must be multiple of 32
 
 partfile=sys.argv[1]
 partdata=json.load(open(partfile))
 
+# if an ROI mask exists, download and downsample to 128 res
+roimask = set()
+if len(sys.argv) == 3:
+    roimaskurl = sys.argv[2]
+    roijson = requests.get(roimaskurl).json()
+    RESDIFF = RESOLUTION/32
+    for rle in roijson:
+        z,y,x0,x1 = rle
+        for pos in range(x0, x1+1):
+            roimask.add((int(pos//RESDIFF), int(y//RESDIFF), int(z//RESDIFF)))             
 SERVER = 'emdata1.int.janelia.org:11000'
 np = Client(SERVER)
 
@@ -60,7 +73,7 @@ for part, bodypairs in partitions.items():
         query = "MATCH (n :`hemibrain-Neuron`)-[:Contains]->(:SynapseSet)-[:Contains]->(x :Synapse)-[:SynapsesTo]->(y :Synapse)<-[:Contains]-(:SynapseSet)<-[:Contains]-(m :`hemibrain-Neuron`) WHERE n.bodyId=%d AND m.bodyId=%d %s RETURN n.bodyId AS bodyId1, m.bodyId as bodyId2, x.location AS location" % (body1, body2, roistr)
         res = np.fetch_custom(query)
         for idx, row in res.iterrows():
-            loc = numpy.array(row["location"]["coordinates"])/128
+            loc = numpy.array(row["location"]["coordinates"])//RESOLUTION
             loctup = (loc[0], loc[1], loc[2])
             if loctup not in points:
                 points[loctup] = []
@@ -97,6 +110,12 @@ for point, partlist in points.items():
     coord = numpy.array(point)-numpy.array([minx,miny,minz])
     mask[int(coord[0]),int(coord[1]),int(coord[2])] = partval
 
+# apply ROI mask
+if len(roimask) > 0:
+    for (x,y,z), val in numpy.ndenumerate(mask):
+        if (x+minx,y+miny,z+minz) not in roimask:
+            mask[x,y,z] = -1
+
 # perform flood fill
 import scipy.ndimage as ndimage
 while 0 in mask:
@@ -118,7 +137,7 @@ for partnum in range(len(partitions)):
 
     roidata = {}
     roidata["type"] = "points"
-    roidata["resolution"] = 128
+    roidata["resolution"] = RESOLUTION
     roidata["order"] = "zyx"
     roidata["roi"] = roi
     fout = open(str(partnum)+".part.json", 'w')
