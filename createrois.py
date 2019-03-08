@@ -68,7 +68,7 @@ for part, bodypairs in partitions.items():
     if numqueries > len(bodypairs): # original connections were already filtered
         numqueries = len(bodypairs)
     random.shuffle(bodypairs)
-    
+
     for iter1 in range(numqueries):
         (body1, body2) = bodypairs[iter1]
         query = "MATCH (n :`hemibrain-Neuron`)-[:Contains]->(:SynapseSet)-[:Contains]->(x :Synapse)-[:SynapsesTo]->(y :Synapse)<-[:Contains]-(:SynapseSet)<-[:Contains]-(m :`hemibrain-Neuron`) WHERE n.bodyId=%d AND m.bodyId=%d %s RETURN n.bodyId AS bodyId1, m.bodyId as bodyId2, x.location AS location" % (body1, body2, roistr)
@@ -119,10 +119,14 @@ if len(roimask) > 0:
 
 # perform flood fill
 import scipy.ndimage as ndimage
-while 0 in mask:
+zerosum = -1
+zerosum2 = 0
+while zerosum != zerosum2:
+    zerosum = zerosum2
     mask2 = ndimage.maximum_filter(mask, 3)
     mask2[mask != 0] = mask[mask != 0]
     mask = mask2
+    zerosum2 = (mask==0).sum()
 
 # make ROI from each unique seed 
 # save each ROI in json with meta that explains the format
