@@ -51,7 +51,7 @@ points = {}
 
 roistr = ""
 rois = partdata["rois"]
-if rois is not None:
+if rois is not None and len(rois) > 0:
     roistr = "AND ("
     for index, roi in enumerate(rois):
         if index == 0:
