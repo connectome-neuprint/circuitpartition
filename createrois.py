@@ -99,6 +99,20 @@ for point, partlist in points.items():
     if z > maxz:
         maxz = z
 
+for (x,y,z) in roimask:
+    if x < minx:
+        minx = x
+    if y < miny:
+        miny = y
+    if z < minz:
+        minz = z
+    if x > maxx:
+        maxx = x
+    if y > maxy:
+        maxy = y
+    if z > maxz:
+        maxz = z
+
 xsize = int(maxx-minx+1)
 ysize = int(maxy-miny+1)
 zsize = int(maxz-minz+1)
