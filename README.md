@@ -21,6 +21,13 @@ One must also download the neuprint private token.
 This will output a list of neuron ids and their partition(s) in "parts.json".  The file "connparts.json" provids the list
 of every A-B connection and the partition assignment [bodypre, bodypost, part].
 
+# Finding ROI "violations"
+
+find_violators.py contains a function for finding cases where a pair of neurons share connections across an ROI 
+boundary.  This indicates areas of imprecise ROI boundaries.  (TODO: check for situations where a pre and post
+synpse are divided by an ROI boundary, try to normalize the number of violations based on ROI size, speedup
+point query)
+
 # TODO
 
 * Implement tool that exports a DVID ROI to enable visualization of partition
